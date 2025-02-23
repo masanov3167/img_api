@@ -7,37 +7,78 @@ const app = express();
 const port = 3010;
 
 app.use(express.json());
+app.use("/public", express.static(path.join(__dirname, "public")));
 
-app.post("/generate-images", async (req, res) => {
+
+app.get("/generate-images", async (req, res) => {
   try {
-    const { titles } = req.body;
-    if (!Array.isArray(titles) || titles.length !== 5) {
-      return res.status(400).json({ error: "titles must be an array of 5 elements" });
-    }
-
     const browser = await puppeteer.launch();
     const page = await browser.newPage();
+    const title = req.query?.title ?? "Bu title"
+    const content = req.query?.content ?? ` Do’stlar agar postni
+            foydali deb hisoblasangiz
+            saqlab oling va yaqinlar 
+            bilan ulashing!`
 
-    const htmlContent = `
-      <html>
-      <head>
-        <style>
-          body { display: flex; flex-wrap: wrap; gap: 20px; padding: 20px; background: #f3f4f6; }
-          .box { width: 300px; height: 200px; display: flex; align-items: center; justify-content: center;
-                 font-size: 20px; font-weight: bold; color: white; border-radius: 10px; text-align: center;
-                 box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-          .box:nth-child(1) { background: linear-gradient(135deg, #FF6B6B, #FF8E8E); }
-          .box:nth-child(2) { background: linear-gradient(135deg, #4ECDC4, #6EDFD4); }
-          .box:nth-child(3) { background: linear-gradient(135deg, #45B7D1, #65C7E1); }
-          .box:nth-child(4) { background: linear-gradient(135deg, #96CEB4, #B6DEC4); }
-          .box:nth-child(5) { background: linear-gradient(135deg, #FFEEAD, #FFF1BD); }
-        </style>
-      </head>
-      <body>
-        ${titles.map((title) => `<div class="box">${title}</div>`).join("")}
-      </body>
-      </html>
-    `;
+    const htmlContent = `<html lang="en">
+<head>
+    <style>
+        @font-face {
+            font-family: 'Mont';
+            src: url('http://localhost:3010/public/font/mont.ttf') format('truetype');
+            font-weight: 600;
+            font-style: normal;
+        }
+        body { 
+            background: #f3f4f6; 
+        }
+
+        .box { 
+            width: 500px; 
+            height: 625px; /* min-height o'rniga height */
+            position: relative;
+            font-size: 20px; 
+            font-weight: 600; 
+            font-family: 'Mont', sans-serif; /* Custom shrift */
+            overflow: hidden; 
+            margin: 20px 0;
+            padding: 0 10px;
+        }
+
+        .box img {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            object-fit: cover; /* Div ichida to'liq joylashadi */
+            top: 0;
+            left: 0;
+            z-index: -1;
+        }
+
+        h1 {
+            color: #FF9000;
+            display: block;
+            margin-top: -1px;
+            text-align: center;
+        }
+        span{
+            display: block;
+            text-align: center;
+            margin-top: 30px;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="box">
+        <img src="http://localhost:3010/public/bg/bg_next.png" alt="Background">
+        <h1>${title}</h1>
+        <span>
+           ${content}
+        </span>
+    </div>
+</body>
+</html>`;
 
     await page.setContent(htmlContent, { waitUntil: "networkidle0" });
 
@@ -45,14 +86,20 @@ app.post("/generate-images", async (req, res) => {
 
     const boxes = await page.$$(".box");
     for (let i = 0; i < boxes.length; i++) {
-      const imagePath = path.join(__dirname, `image-${Date.now()}-${i}.png`);
+      const imagePath = path.join(__dirname, "public", `image-${Date.now()}-${i}.png`);
       await boxes[i].screenshot({ path: imagePath });
       imagePaths.push(imagePath);
     }
 
     await browser.close();
-
-    res.json({ message: "Images generated", images: imagePaths });
+    const files = fs.readdirSync("public");
+    const resp = files.map(i => {
+      if (i !== "bg" && i !== "font"){
+        return `https://931f-188-113-253-10.ngrok-free.app/public/${i}`
+      }
+    })
+        
+    res.json({ message: "Images generated", images: resp.filter(i => i) });
   } catch (error) {
     console.error("Error generating images:", error);
     res.status(500).json({ error: "Internal server error" });
