@@ -15,12 +15,12 @@ app.get("/generate-images", async (req, res) => {
     const browser = await puppeteer.launch();
     const page = await browser.newPage();
     const title = req.query?.title ?? "Bu title"
-    const content = req.query?.content ?? ` Do’stlar agar postni
-            foydali deb hisoblasangiz
-            saqlab oling va yaqinlar 
-            bilan ulashing!`
+    const content = req.query?.content ?? `Bu content`;
+    const next = req?.query?.next ?? false;
 
-    const htmlContent = `<html lang="en">
+    const htmlContent = `<!DOCTYPE html>
+<html lang="en">
+
 <head>
     <style>
         @font-face {
@@ -29,55 +29,101 @@ app.get("/generate-images", async (req, res) => {
             font-weight: 600;
             font-style: normal;
         }
-        body { 
-            background: #f3f4f6; 
+
+        body {
+            background: #005051;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            font-family: 'Mont', sans-serif;
         }
 
-        .box { 
-            width: 500px; 
-            height: 625px; /* min-height o'rniga height */
+        .box {
+            width: 500px;
+            height: 625px;
             position: relative;
-            font-size: 20px; 
-            font-weight: 600; 
-            font-family: 'Mont', sans-serif; /* Custom shrift */
-            overflow: hidden; 
-            margin: 20px 0;
-            padding: 0 10px;
-        }
-
-        .box img {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            object-fit: cover; /* Div ichida to'liq joylashadi */
-            top: 0;
-            left: 0;
-            z-index: -1;
+            font-size: 20px;
+            background-color: #005051;
+            display: flex;
+            flex-direction: column;
         }
 
         h1 {
             color: #FF9000;
-            display: block;
-            margin-top: -1px;
             text-align: center;
         }
-        span{
-            display: block;
+
+        .text-container {
+            flex-grow: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
             text-align: center;
-            margin-top: 30px;
+            padding: 0 20px;
+            margin-bottom: 80px;
+        }
+
+        .text-content {
             color: white;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            hyphens: auto;
+            max-width: 100%;
+            line-height: 100%;
+            font-family: 'Mont', sans-serif !important;
+            font-size: 35px;
+        }
+
+        .top-right-svg {
+            position: absolute;
+            top: 20px;
+            right: 25px;
+            width: 20px;
+            height: 30px;
+        }
+
+        .bottom-left-svg {
+            position: absolute;
+            bottom: 20px;
+            left: 25px;
+            gap: 15px;
+            display: flex;
+        }
+
+        .bottom-right-svg {
+            position: absolute;
+            bottom: 10px;
+            right: 25px;
         }
     </style>
 </head>
+
 <body>
     <div class="box">
-        <img src="http://localhost:3010/public/bg/bg_next.png" alt="Background">
+        <img src="http://localhost:3010/public/bg/save.svg" alt="Top Right Design" class="top-right-svg">
+
         <h1>${title}</h1>
-        <span>
-           ${content}
-        </span>
+
+        <div class="text-container">
+            <h3 class="text-content">
+                ${content}
+            </h3>
+        </div>
+
+        <div class="bottom-left-svg">
+            <img src="http://localhost:3010/public/bg/like.svg" alt="Bottom Left Design" width="30px" height="32px">
+            <img src="http://localhost:3010/public/bg/comment.svg" alt="Bottom Left Design" width="30px" height="32px">
+            <img src="http://localhost:3010/public/bg/share.svg" alt="Bottom Left Design" width="30px" height="32px">
+        </div>
+        <div class="bottom-right-svg">
+        <img src="http://localhost:3010/public/bg/${next? "next":"ws"}.svg" width="${next? "60px":"200px"}" height="${next?"30px":"40px"}" style="${next? "margin-right: -10px;" :""}"/>
+        
+        </div>
     </div>
 </body>
+
 </html>`;
 
     await page.setContent(htmlContent, { waitUntil: "networkidle0" });
