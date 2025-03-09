@@ -13,7 +13,9 @@ app.use(express.urlencoded({ extended: true })); // Form data uchun
 app.use("/public", express.static(path.join(__dirname, "public")));
 app.post("/generate-images", async (req, res) => {
   try {
-    const browser = await puppeteer.launch();
+    const browser = await puppeteer.launch({
+      args: ['--no-sandbox', '--disable-setuid-sandbox']
+    });
     const page = await browser.newPage();    
     const title = req.body?.title ?? "Bu title"
     const content = req.body?.content ?? `Bu content`;
