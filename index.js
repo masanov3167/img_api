@@ -6,7 +6,7 @@ const {marked} = require("marked");
 
 const app = express();
 const port = 3010;
-const domain = "https://img_api.masanov.uz";
+const domain = "https://img-api.masanov.uz";
 
 app.use(express.json()); // body-parser o'rniga
 app.use(express.urlencoded({ extended: true })); // Form data uchun
